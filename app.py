@@ -177,7 +177,6 @@ def get_shelf_life(product, storage, opened):
     return result[0] if result and result[0] is not None else None
 
 #Registration route
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -217,6 +216,7 @@ def register():
 
         cur.close()
         conn.close()
+
         try:
             send_email(
                 email,
@@ -231,11 +231,12 @@ def register():
             cur.close()
             conn.close()
             flash("Failed to send OTP email. Please try again.", "error")
-        return render_template("register.html")
-return redirect(url_for('verify_otp', email=email))
+            return render_template("register.html")
+
+        return redirect(url_for('verify_otp', email=email))
 
     return render_template("register.html")
-
+    
 #login route
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -702,14 +703,16 @@ def resend_otp():
     cur.close()
     conn.close()
 
-    send_email(
-        email,
-        "Your New OTP - ShelfBuddy",
-        f"Your new OTP is {otp}. It expires in 5 minutes."
+    try:
+        send_email(
+            email,
+            "Your New OTP - ShelfBuddy",
+            f"Your new OTP is {otp}. It expires in 5 minutes."
     )
-
-    flash("A new OTP has been sent to your email.", "success")
-    return redirect(url_for('verify_otp', email=email))
+        flash("A new OTP has been sent to your email.", "success")
+    except Exception:
+        flash("Failed to send OTP. Please try again later.", "error")
+return redirect(url_for('verify_otp', email=email))
 
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
@@ -800,14 +803,16 @@ def forgot_password():
 
         reset_link = url_for('reset_password', token=token, _external=True)
 
-        send_email(
-            email,
-            "Reset Your Password - ShelfBuddy",
-            f"Click this link to reset your password:\n{reset_link}\nExpires in 15 minutes."
-        )
-
-        flash("Password reset link sent to your email.", "success")
-        return redirect(url_for('login'))
+        try:
+            send_email(
+                email,
+                "Reset Your Password - ShelfBuddy",
+                f"Click this link to reset your password:\n{reset_link}\nExpires in 15 minutes."
+            )
+            flash("Password reset link sent to your email.", "success")
+        except Exception:
+            flash("Failed to send reset email. Please try again later.", "error")
+        return redirect(url_for('login'))redirect(url_for('login'))
 
     return render_template("forgot_password.html")
 
