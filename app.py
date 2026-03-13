@@ -232,8 +232,7 @@ def register():
             conn.close()
             flash("Failed to send OTP email. Please try again.", "error")
             return render_template("register.html")
-
-        return redirect(url_for('verify_otp', email=email))
+            return redirect(url_for('verify_otp', email=email))
 
     return render_template("register.html")
     
@@ -708,12 +707,13 @@ def resend_otp():
             email,
             "Your New OTP - ShelfBuddy",
             f"Your new OTP is {otp}. It expires in 5 minutes."
-    )
+        )
         flash("A new OTP has been sent to your email.", "success")
     except Exception:
         flash("Failed to send OTP. Please try again later.", "error")
-return redirect(url_for('verify_otp', email=email))
 
+    return redirect(url_for('verify_otp', email=email))
+    
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
     email = request.args.get('email')
@@ -812,7 +812,7 @@ def forgot_password():
             flash("Password reset link sent to your email.", "success")
         except Exception:
             flash("Failed to send reset email. Please try again later.", "error")
-        return redirect(url_for('login'))redirect(url_for('login'))
+        return redirect(url_for('login'))
 
     return render_template("forgot_password.html")
 
