@@ -188,17 +188,14 @@ def register():
         cur = conn.cursor()
 
         try:
-            # Insert user
             cur.execute(
                 "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
                 (username, email, password)
             )
 
-            # Generate OTP
             otp = str(random.randint(100000, 999999))
             expiry = (datetime.now() + timedelta(minutes=5)).isoformat()
 
-            # Update OTP fields
             cur.execute("""
                 UPDATE users
                 SET otp=?, otp_expiry=?, is_verified=0
@@ -223,16 +220,21 @@ def register():
                 "Verify Your Account - ShelfBuddy",
                 f"Your OTP is {otp}. It expires in 5 minutes."
             )
-        except Exception:
+        except Exception as e:
+            print("REGISTER EMAIL ERROR:", str(e))
+
             conn = get_db_connection()
             cur = conn.cursor()
             cur.execute("DELETE FROM users WHERE email=?", (email,))
             conn.commit()
             cur.close()
             conn.close()
-            flash("Failed to send OTP email. Please try again.", "error")
+
+            flash("We couldn't send the OTP email right now. Please try again.", "error")
             return render_template("register.html")
-            return redirect(url_for('verify_otp', email=email))
+
+        flash("OTP sent to your email. Please verify your account.", "success")
+        return redirect(url_for('verify_otp', email=email))
 
     return render_template("register.html")
     
@@ -651,21 +653,30 @@ def admin_dashboard():
         products=products,
         suggestions=suggestions
     )
-
+    
 def send_email(to_email, subject, body):
     sender_email = os.getenv("EMAIL_USER")
     sender_password = os.getenv("EMAIL_PASS")
+    email_host = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+    email_port = int(os.getenv("EMAIL_PORT", 465))
+
     if not sender_email or not sender_password:
-        raise Exception("Email credentials not configured in .env")
+        raise Exception("Email credentials not configured in environment variables")
 
     msg = MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = sender_email
     msg['To'] = to_email
 
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, to_email, msg.as_string())
+    if email_port == 465:
+        with smtplib.SMTP_SSL(email_host, email_port, timeout=8) as server:
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, to_email, msg.as_string())
+    else:
+        with smtplib.SMTP(email_host, email_port, timeout=8) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, to_email, msg.as_string())
 
 @app.route('/resend-otp')
 def resend_otp():
@@ -709,112 +720,11 @@ def resend_otp():
             f"Your new OTP is {otp}. It expires in 5 minutes."
         )
         flash("A new OTP has been sent to your email.", "success")
-    except Exception:
-        flash("Failed to send OTP. Please try again later.", "error")
+    except Exception as e:
+        print("RESEND OTP EMAIL ERROR:", str(e))
+        flash("Couldn't resend OTP right now. Please try again.", "error")
 
     return redirect(url_for('verify_otp', email=email))
-    
-@app.route('/verify-otp', methods=['GET', 'POST'])
-def verify_otp():
-    email = request.args.get('email')
-
-    if not email:
-        flash("Invalid verification request.", "error")
-        return redirect(url_for('register'))
-
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    if request.method == 'POST':
-        entered_otp = request.form['otp'].strip()
-
-        user = cur.execute(
-            "SELECT otp, otp_expiry FROM users WHERE email=?",
-            (email,)
-        ).fetchone()
-
-        if not user:
-            cur.close()
-            conn.close()
-            flash("Invalid request.", "error")
-            return redirect(url_for('register'))
-
-        stored_otp, expiry = user
-
-        if not expiry:
-            cur.close()
-            conn.close()
-            flash("OTP expired. Please request a new one.", "error")
-            return render_template("verify_otp.html", email=email)
-
-        expiry = datetime.fromisoformat(expiry)
-
-        if entered_otp == stored_otp and datetime.now() < expiry:
-            cur.execute("""
-                UPDATE users
-                SET is_verified=1, otp=NULL, otp_expiry=NULL
-                WHERE email=?
-            """, (email,))
-            conn.commit()
-            cur.close()
-            conn.close()
-
-            flash("Email verified successfully. Please login.", "success")
-            return redirect(url_for('login'))
-
-        cur.close()
-        conn.close()
-        flash("Invalid or expired OTP.", "error")
-        return render_template("verify_otp.html", email=email)
-
-    cur.close()
-    conn.close()
-    return render_template("verify_otp.html", email=email)
-
-@app.route('/forgot-password', methods=['GET', 'POST'])
-def forgot_password():
-    if request.method == 'POST':
-        email = request.form['email'].strip().lower()
-
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        cur.execute("SELECT id FROM users WHERE email=?", (email,))
-        user = cur.fetchone()
-
-        if not user:
-            cur.close()
-            conn.close()
-            flash("If the account exists, a reset link has been sent.", "success")
-            return redirect(url_for('forgot_password'))
-
-        token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
-        expiry = (datetime.now() + timedelta(minutes=15)).isoformat()
-
-        cur.execute("""
-            UPDATE users
-            SET reset_token=?, reset_token_expiry=?
-            WHERE email=?
-        """, (token, expiry, email))
-
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        reset_link = url_for('reset_password', token=token, _external=True)
-
-        try:
-            send_email(
-                email,
-                "Reset Your Password - ShelfBuddy",
-                f"Click this link to reset your password:\n{reset_link}\nExpires in 15 minutes."
-            )
-            flash("Password reset link sent to your email.", "success")
-        except Exception:
-            flash("Failed to send reset email. Please try again later.", "error")
-        return redirect(url_for('login'))
-
-    return render_template("forgot_password.html")
 
 @app.route('/reset/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -873,20 +783,52 @@ def reset_password(token):
     cur.close()
     conn.close()
     return render_template("reset_password.html")
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email'].strip().lower()
 
-@app.route('/reset-users-temp')
-def reset_users_temp():
-    conn = get_db_connection()
-    cur = conn.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-    cur.execute("DELETE FROM pantry")
-    cur.execute("DELETE FROM users")
+        cur.execute("SELECT id FROM users WHERE email=?", (email,))
+        user = cur.fetchone()
 
-    conn.commit()
-    cur.close()
-    conn.close()
+        if not user:
+            cur.close()
+            conn.close()
+            flash("If the account exists, a reset link has been sent.", "success")
+            return redirect(url_for('forgot_password'))
 
-    return "Users and pantry cleared successfully"
+        token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        expiry = (datetime.now() + timedelta(minutes=15)).isoformat()
+
+        cur.execute("""
+            UPDATE users
+            SET reset_token=?, reset_token_expiry=?
+            WHERE email=?
+        """, (token, expiry, email))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        reset_link = url_for('reset_password', token=token, _external=True)
+
+        try:
+            send_email(
+                email,
+                "Reset Your Password - ShelfBuddy",
+                f"Click this link to reset your password:\n{reset_link}\nExpires in 15 minutes."
+            )
+            flash("Password reset link sent to your email.", "success")
+        except Exception as e:
+            print("RESET EMAIL ERROR:", str(e))
+            flash("Couldn't send reset email right now. Please try again later.", "error")
+
+        return redirect(url_for('login'))
+
+    return render_template("forgot_password.html")
     
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
