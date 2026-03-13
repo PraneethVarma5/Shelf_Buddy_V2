@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - Shelf Buddy</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #13182e, #1f2a4d);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .auth-container {
+            width: 360px;
+            max-width: 90%;
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            text-align: center;
+        }
+
+        .auth-container h2 {
+            margin-bottom: 12px;
+            color: #13182e;
+        }
+
+        .auth-subtitle {
+            margin-bottom: 25px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .auth-container input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 18px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            transition: 0.2s ease;
+            box-sizing: border-box;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .auth-container input:focus {
+            border-color: #3ba55d;
+            outline: none;
+            box-shadow: 0 0 5px rgba(59,165,93,0.3);
+        }
+
+        .auth-container button {
+            width: 100%;
+            padding: 14px;
+            background: #13182e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        .auth-container button:hover {
+            background: #3ba55d;
+        }
+
+        .auth-links {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .auth-links a {
+            display: block;
+            margin-top: 10px;
+            text-decoration: none;
+            color: #13182e;
+            font-weight: 500;
+            transition: 0.2s ease;
+        }
+
+        .auth-links a:hover {
+            color: #3ba55d;
+        }
+
+        .auth-error {
+            background: #fdeaea;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .auth-success {
+            background: #eaf7ee;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h2>Verify Your Email</h2>
+        <p class="auth-subtitle">Enter the 6-digit OTP sent to your email. Check your inbox (and spam/junk folder) for the email.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{% if category == 'success' %}auth-success{% else %}auth-error{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('verify_otp', email=email) }}">
+            <input type="text" name="otp" placeholder="Enter 6-digit OTP" maxlength="6" required>
+            <button type="submit">Verify OTP</button>
+        </form>
+
+        <div class="auth-links">
+            <a href="{{ url_for('resend_otp', email=email) }}">Resend OTP</a>
+            <a href="{{ url_for('login') }}">Back to Login</a>
+            <a href="{{ url_for('first_page') }}">Back to Home</a>
+        </div>
+    </div>
+
+</body>
+</html>
