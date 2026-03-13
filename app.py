@@ -46,7 +46,348 @@ def create_tables():
         shelf_life_frozen_opened INTEGER
     )
     """)
+    cur.execute("SELECT COUNT(*) FROM products")
+product_count = cur.fetchone()[0]
 
+if product_count == 0:
+    products = [
+                ("Rice", "food", 180, 90, 365, 180, 0, 0),
+("Basmati Rice", "food", 365, 180, 365, 180, 0, 0),
+("Brown Rice", "food", 120, 60, 240, 120, 0, 0),
+("Wheat Flour", "food", 180, 60, 365, 180, 730, 365),
+("Maida", "food", 180, 60, 365, 180, 730, 365),
+("Sugar", "food", 3650, 3650, 3650, 3650, 0, 0),
+("Salt", "food", 3650, 3650, 3650, 3650, 0, 0),
+("Lentils", "food", 365, 180, 365, 180, 0, 0),
+("Chickpeas", "food", 730, 365, 730, 365, 0, 0),
+("Rajma", "food", 730, 365, 730, 365, 0, 0),
+
+# Oils & Fats
+("Vegetable Oil", "food", 365, 180, 0, 0, 0, 0),
+("Olive Oil", "food", 365, 180, 0, 0, 0, 0),
+("Ghee", "food", 365, 180, 365, 180, 0, 0),
+("Butter", "food", 1, 0, 180, 30, 365, 180),
+
+# Dairy
+("Milk", "food", 0, 0, 5, 3, 0, 0),
+("Curd", "food", 0, 0, 14, 5, 0, 0),
+("Cheese", "food", 0, 0, 180, 30, 240, 180),
+("Paneer", "food", 0, 0, 5, 2, 90, 30),
+
+# Vegetables
+("Onion", "food", 30, 14, 60, 14, 0, 0),
+("Potato", "food", 60, 0, 0, 0, 0, 0),
+("Tomato", "food", 7, 0, 14, 7, 0, 0),
+("Carrot", "food", 5, 0, 21, 10, 180, 180),
+("Cabbage", "food", 3, 0, 14, 7, 0, 0),
+("Spinach", "food", 1, 0, 5, 3, 180, 90),
+("Capsicum", "food", 5, 0, 14, 7, 0, 0),
+("Brinjal", "food", 3, 0, 7, 5, 0, 0),
+
+# Fruits
+("Apple", "food", 7, 0, 30, 15, 0, 0),
+("Banana", "food", 3, 0, 7, 3, 0, 0),
+("Orange", "food", 7, 0, 21, 10, 0, 0),
+("Mango", "food", 3, 0, 7, 5, 180, 90),
+("Grapes", "food", 2, 0, 7, 5, 0, 0),
+
+# Meat & Fish
+("Chicken", "food", 0, 0, 2, 2, 365, 180),
+("Mutton", "food", 0, 0, 3, 3, 365, 180),
+("Fish", "food", 0, 0, 2, 2, 240, 120),
+("Eggs", "food", 7, 0, 30, 0, 0, 0),
+
+# Packaged
+("Bread", "food", 5, 5, 14, 14, 90, 30),
+("Biscuits", "food", 180, 30, 0, 0, 0, 0),
+("Instant Noodles", "food", 365, 365, 0, 0, 0, 0),
+("Jam", "food", 365, 0, 365, 90, 0, 0),
+("Honey", "food", 3650, 3650, 3650, 3650, 0, 0),
+("Peanut Butter", "food", 365, 180, 365, 180, 0, 0),
+("Ketchup", "food", 365, 90, 365, 90, 0, 0),
+("Mayonnaise", "food", 30, 7, 90, 30, 0, 0),
+("Ground Coffee", "food", 150, 30, 365, 150, 730, 365),
+
+("Tea Bags", "food", 730, 365, 0, 0, 0, 0),
+
+("Apple Juice (Carton)", "food", 240, 7, 240, 10, 365, 30),
+
+("Orange Juice (Fresh)", "food", 0, 0, 7, 3, 365, 30),
+
+("Coconut Water (Packaged)", "food", 270, 1, 270, 3, 0, 0),
+
+("Red Wine", "food", 3650, 3, 0, 5, 0, 0),
+
+("White Wine", "food", 3650, 3, 3650, 7, 0, 0),
+
+("Beer (Can)", "food", 180, 1, 270, 1, 0, 0),
+
+("Energy Drink", "food", 365, 1, 365, 1, 0, 0),
+
+("Soda/Cola", "food", 270, 1, 365, 1, 0, 0),
+
+("Baking Powder", "food", 540, 180, 0, 0, 0, 0),
+
+("Baking Soda", "food", 730, 180, 0, 0, 0, 0),
+
+("Cornstarch", "food", 730, 365, 0, 0, 0, 0),
+
+("Cocoa Powder", "food", 730, 365, 0, 0, 0, 0),
+
+("Chocolate Chips", "food", 365, 180, 730, 365, 0, 0),
+
+("Vanilla Extract", "food", 1825, 1825, 0, 0, 0, 0),
+
+("Dry Yeast", "food", 365, 120, 730, 180, 730, 365),
+
+("Maple Syrup", "food", 365, 30, 730, 365, 0, 0),
+
+("Molasses", "food", 730, 365, 0, 0, 0, 0),
+
+("Powdered Sugar", "food", 730, 540, 0, 0, 0, 0),
+
+("Quinoa", "food", 365, 180, 730, 365, 0, 0),
+
+("Oats (Rolled)", "food", 365, 180, 730, 365, 0, 0),
+
+("Dry Pasta", "food", 730, 365, 0, 0, 0, 0),
+
+("Couscous", "food", 365, 180, 0, 0, 0, 0),
+
+("Barley", "food", 365, 180, 0, 0, 0, 0),
+
+("Cornmeal", "food", 365, 180, 730, 365, 730, 365),
+
+("Popcorn Kernels", "food", 730, 365, 0, 0, 0, 0),
+
+("Rice Flour", "food", 180, 90, 365, 180, 0, 0),
+
+("Spaghetti (Dry)", "food", 730, 365, 0, 0, 0, 0),
+
+("Wild Rice", "food", 730, 365, 0, 0, 0, 0),
+
+
+("Black Pepper", "food", 730, 365, 0, 0, 0, 0),
+
+("Turmeric Powder", "food", 730, 365, 0, 0, 0, 0),
+
+("Cinnamon Sticks", "food", 1095, 730, 0, 0, 0, 0),
+
+("Soy Sauce", "food", 1095, 365, 1095, 730, 0, 0),
+
+("Vinegar (White)", "food", 3650, 3650, 0, 0, 0, 0),
+
+("Mustard Sauce", "food", 365, 180, 365, 365, 0, 0),
+
+("Hot Sauce", "food", 730, 365, 730, 730, 0, 0),
+
+("Olive Oil (Extra Virgin)", "food", 540, 180, 0, 0, 0, 0),
+
+("Coconut Oil", "food", 730, 365, 0, 0, 0, 0),
+
+("Salad Dressing", "food", 365, 1, 365, 90, 0, 0),
+
+("Strawberries", "food", 1, 0, 7, 3, 300, 180),
+
+("Blueberries", "food", 2, 0, 14, 7, 300, 180),
+
+("Lemon", "food", 14, 0, 45, 14, 0, 0),
+
+("Pineapple (Whole)", "food", 3, 0, 5, 3, 0, 0),
+
+("Watermelon (Whole)", "food", 10, 0, 21, 5, 0, 0),
+
+("Avocado", "food", 4, 0, 10, 3, 180, 90),
+
+("Pears", "food", 4, 0, 15, 5, 0, 0),
+
+("Peaches", "food", 3, 0, 7, 3, 300, 180),
+
+("Kiwi", "food", 7, 0, 21, 7, 0, 0),
+
+("Cherries", "food", 1, 0, 10, 5, 300, 180),
+
+("Garlic (Whole)", "food", 150, 30, 0, 0, 0, 0),
+
+("Ginger (Root)", "food", 14, 0, 30, 14, 180, 90),
+
+("Broccoli", "food", 1, 0, 10, 5, 365, 180),
+
+("Cauliflower", "food", 1, 0, 14, 7, 365, 180),
+
+("Cucumber", "food", 2, 0, 7, 3, 0, 0),
+
+("Mushrooms", "food", 1, 0, 7, 3, 0, 0),
+
+("Lettuce", "food", 1, 0, 10, 5, 0, 0),
+
+("Green Peas (Fresh)", "food", 1, 0, 5, 2, 365, 180),
+
+("Zucchini", "food", 2, 0, 7, 4, 300, 180),
+
+("Celery", "food", 2, 0, 21, 7, 0, 0),
+
+("Almond Milk (UHT)", "food", 240, 0, 240, 10, 0, 0),
+
+("Soy Milk (UHT)", "food", 240, 0, 240, 10, 0, 0),
+
+("Whipped Cream (Can)", "food", 0, 0, 120, 30, 0, 0),
+
+("Sour Cream", "food", 0, 0, 21, 10, 0, 0),
+
+("Cream Cheese", "food", 0, 0, 60, 14, 180, 30),
+
+("Margarine", "food", 120, 30, 180, 90, 365, 180),
+
+("Parmesan (Hard)", "food", 30, 0, 300, 90, 365, 180),
+
+("Greek Yogurt", "food", 0, 0, 14, 7, 0, 0),
+
+("Condensed Milk", "food", 365, 2, 365, 14, 0, 0),
+
+("Heavy Cream", "food", 0, 0, 30, 7, 0, 0),
+
+("Ground Beef", "food", 0, 0, 2, 2, 120, 90),
+
+("Bacon", "food", 0, 0, 14, 7, 180, 30),
+
+("Sausages (Fresh)", "food", 0, 0, 2, 2, 60, 30),
+
+("Shrimp (Raw)", "food", 0, 0, 2, 2, 180, 90),
+
+("Salmon (Fresh)", "food", 0, 0, 2, 2, 90, 60),
+
+("Turkey (Whole)", "food", 0, 0, 2, 2, 365, 180),
+
+("Salami", "food", 30, 7, 60, 21, 0, 0),
+
+("Canned Tuna", "food", 1095, 2, 0, 3, 0, 0),
+
+("Ham (Slices)", "food", 0, 0, 5, 3, 60, 30),
+
+("Pork Chops", "food", 0, 0, 4, 4, 180, 120),
+
+("Canned Beans", "food", 730, 2, 0, 4, 0, 0),
+
+("Canned Tomatoes", "food", 540, 2, 0, 5, 0, 0),
+
+("Canned Corn", "food", 730, 2, 0, 4, 0, 0),
+
+("Pickles", "food", 365, 30, 365, 180, 0, 0),
+
+("Salsa", "food", 365, 5, 365, 30, 0, 0),
+
+("Marinara Sauce", "food", 365, 4, 365, 7, 0, 0),
+
+("Olives (Jar)", "food", 365, 30, 365, 120, 0, 0),
+
+("Coconut Milk (Can)", "food", 730, 2, 0, 4, 0, 0),
+
+("Anchovies (Canned)", "food", 365, 2, 0, 30, 0, 0),
+
+("Applesauce (Jar)", "food", 365, 7, 365, 14, 0, 0),
+
+
+("Potato Chips", "food", 60, 7, 0, 0, 0, 0),
+
+("Dark Chocolate", "food", 365, 180, 0, 0, 0, 0),
+
+("Milk Chocolate", "food", 300, 150, 0, 0, 0, 0),
+
+("Marshmallows", "food", 240, 90, 0, 0, 0, 0),
+
+("Walnuts", "food", 90, 30, 180, 90, 365, 180),
+
+("Almonds", "food", 180, 90, 365, 180, 730, 365),
+
+("Cashews", "food", 120, 60, 240, 120, 365, 180),
+
+("Popcorn (Microwave)", "food", 270, 270, 0, 0, 0, 0),
+
+("Beef Jerky", "food", 365, 30, 0, 0, 0, 0),
+
+("Gum (Pack)", "food", 365, 180, 0, 0, 0, 0),
+("Curry Leaves", "food", 2, 0, 15, 10, 90, 60),
+
+("Coriander Leaves", "food", 1, 0, 7, 4, 0, 0),
+
+("Green Chilies", "food", 4, 0, 21, 14, 180, 90),
+
+("Ginger (Fresh)", "food", 7, 0, 30, 15, 180, 90),
+
+("Garlic (Whole)", "food", 120, 30, 0, 0, 0, 0),
+
+("Bhindi (Okra)", "food", 2, 0, 7, 4, 0, 0),
+
+("Lauki (Bottle Gourd)", "food", 2, 0, 7, 3, 0, 0),
+
+("Karela (Bitter Gourd)", "food", 4, 0, 10, 7, 0, 0),
+
+("Cauliflower (Gobi)", "food", 2, 0, 7, 4, 180, 90),
+
+("Beans (Cluster/French)", "food", 2, 0, 7, 5, 180, 90),
+
+("Mooli (Radish)", "food", 3, 0, 10, 5, 0, 0),
+
+("Kaddu (Pumpkin)", "food", 15, 2, 30, 5, 180, 90),
+
+("Turai (Ridge Gourd)", "food", 2, 0, 5, 3, 0, 0),
+
+("Coconut (Fresh Whole)", "food", 2, 1, 10, 5, 180, 90),
+
+("Coconut (Grate/Dry)", "food", 180, 30, 365, 180, 0, 0),
+("Garlic (Whole)", "food", 150, 30, 0, 0, 0, 0),
+
+("Ginger (Root)", "food", 14, 0, 30, 14, 180, 90),
+
+("Broccoli", "food", 1, 0, 10, 5, 365, 180),
+
+("Cauliflower", "food", 1, 0, 14, 7, 365, 180),
+
+("Cucumber", "food", 2, 0, 7, 3, 0, 0),
+
+("Mushrooms", "food", 1, 0, 7, 3, 0, 0),
+
+("Lettuce", "food", 1, 0, 10, 5, 0, 0),
+
+("Green Peas (Fresh)", "food", 1, 0, 5, 2, 365, 180),
+
+("Zucchini", "food", 2, 0, 7, 4, 300, 180),
+
+("Celery", "food", 2, 0, 21, 7, 0, 0),
+("Strawberries", "food", 1, 0, 7, 3, 300, 180),
+
+("Blueberries", "food", 2, 0, 14, 7, 300, 180),
+
+("Lemon", "food", 14, 0, 45, 14, 0, 0),
+
+("Pineapple (Whole)", "food", 3, 0, 5, 3, 0, 0),
+
+("Watermelon (Whole)", "food", 10, 0, 21, 5, 0, 0),
+
+("Avocado", "food", 4, 0, 10, 3, 180, 90),
+
+("Pears", "food", 4, 0, 15, 5, 0, 0),
+
+("Peaches", "food", 3, 0, 7, 3, 300, 180),
+
+("Kiwi", "food", 7, 0, 21, 7, 0, 0),
+
+("Cherries", "food", 1, 0, 10, 5, 300, 180),
+    ]
+
+    cur.executemany("""
+        INSERT OR IGNORE INTO products
+        (name, category,
+         shelf_life_room_closed,
+         shelf_life_room_opened,
+         shelf_life_refrigerated_closed,
+         shelf_life_refrigerated_opened,
+         shelf_life_frozen_closed,
+         shelf_life_frozen_opened)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, products)
+    
     # USERS
     cur.execute("""
 CREATE TABLE IF NOT EXISTS users (
