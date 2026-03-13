@@ -1147,7 +1147,20 @@ def reset_password(token):
     conn.close()
     return render_template("reset_password.html")
 
+@app.route('/reset-users-temp')
+def reset_users_temp():
+    conn = get_db_connection()
+    cur = conn.cursor()
 
+    cur.execute("DELETE FROM pantry")
+    cur.execute("DELETE FROM users")
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return "Users and pantry cleared successfully"
+    
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
