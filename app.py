@@ -525,17 +525,6 @@ def first_page():
 def home():
     return render_template("main.html")
 
-# Debug route to check users in the database
-# @app.route('/debug-users')
-# def debug_users():
-#     conn = get_db_connection()
-#     cur = conn.cursor()
-#     cur.execute("SELECT id, username, email FROM users")
-#     users = cur.fetchall()
-#     cur.close()
-#     conn.close()
-#     return str(users)
-
 @app.route('/submit-suggestion', methods=['POST'])
 def submit_suggestion():
     data = request.json
@@ -604,15 +593,6 @@ def get_recipes():
 
     return jsonify(response.json())
 
-# @app.route('/debug-suggestions')
-# def debug_suggestions():
-#     conn = get_db_connection()
-#     cur = conn.cursor()
-#     cur.execute("SELECT * FROM suggestions")
-#     rows = cur.fetchall()
-#     conn.close()
-#     return str(rows)
-
 from functools import wraps
 
 def admin_required(f):
@@ -677,6 +657,67 @@ def send_email(to_email, subject, body):
             server.starttls()
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, to_email, msg.as_string())
+
+@app.route('/verify-otp', methods=['GET', 'POST'])
+def verify_otp():
+    email = request.args.get('email') or request.form.get('email')
+
+    if not email:
+        flash("Invalid verification request.", "error")
+        return redirect(url_for('register'))
+
+    if request.method == 'POST':
+        entered_otp = request.form['otp'].strip()
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        user = cur.execute("""
+            SELECT otp, otp_expiry
+            FROM users
+            WHERE email=?
+        """, (email,)).fetchone()
+
+        if not user:
+            cur.close()
+            conn.close()
+            flash("User not found.", "error")
+            return redirect(url_for('register'))
+
+        stored_otp, expiry = user
+
+        if not stored_otp or not expiry:
+            cur.close()
+            conn.close()
+            flash("OTP not found. Please request a new one.", "error")
+            return redirect(url_for('verify_otp', email=email))
+
+        if datetime.now() > datetime.fromisoformat(expiry):
+            cur.close()
+            conn.close()
+            flash("OTP expired. Please request a new one.", "error")
+            return redirect(url_for('verify_otp', email=email))
+
+        if entered_otp != stored_otp:
+            cur.close()
+            conn.close()
+            flash("Invalid OTP. Please try again.", "error")
+            return redirect(url_for('verify_otp', email=email))
+
+        cur.execute("""
+            UPDATE users
+            SET is_verified=1, otp=NULL, otp_expiry=NULL
+            WHERE email=?
+        """, (email,))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        flash("Email verified successfully. Please login.", "success")
+        return redirect(url_for('login'))
+
+    return render_template("verify_otp.html", email=email)
 
 @app.route('/resend-otp')
 def resend_otp():
