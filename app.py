@@ -6,10 +6,8 @@ import requests
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
-import smtplib
 import random
 import string
-from email.mime.text import MIMEText
 load_dotenv()
 
 DB_PATH = os.getenv("DATABASE_PATH", "shelfbuddy.db")
@@ -654,60 +652,43 @@ def admin_dashboard():
         suggestions=suggestions
     )
 
-# def send_email(to_email, subject, body):
-#     smtp_host = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
-#     smtp_port = int(os.getenv("EMAIL_PORT", 587))
-#     smtp_user = os.getenv("EMAIL_USER")
-#     smtp_pass = os.getenv("EMAIL_PASS")
-#     sender_email = os.getenv("SENDER_EMAIL", "praneeth882005@gmail.com")
-
-#     if not smtp_user or not smtp_pass:
-#         raise Exception("Email credentials not configured in .env")
-
-#     msg = MIMEText(body)
-#     msg["Subject"] = subject
-#     msg["From"] = f"ShelfBuddy <{sender_email}>"
-#     msg["To"] = to_email
-
-#     with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
-#         server.ehlo()
-#         server.starttls()
-#         server.ehlo()
-#         server.login(smtp_user, smtp_pass)
-#         server.sendmail(sender_email, to_email, msg.as_string())
 def send_email(to_email, subject, body):
-    smtp_host = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
-    smtp_port = int(os.getenv("EMAIL_PORT", 587))
-    smtp_user = os.getenv("EMAIL_USER")
-    smtp_pass = os.getenv("EMAIL_PASS")
+    api_key = os.getenv("BREVO_API_KEY")
     sender_email = os.getenv("SENDER_EMAIL", "praneeth882005@gmail.com")
+    sender_name = "ShelfBuddy"
 
-    print("EMAIL DEBUG -> HOST:", smtp_host)
-    print("EMAIL DEBUG -> PORT:", smtp_port)
-    print("EMAIL DEBUG -> USER:", smtp_user)
-    print("EMAIL DEBUG -> PASS SET:", bool(smtp_pass))
+    print("EMAIL DEBUG -> Using Brevo HTTP API")
+    print("EMAIL DEBUG -> API KEY SET:", bool(api_key))
     print("EMAIL DEBUG -> SENDER:", sender_email)
+    print("EMAIL DEBUG -> TO:", to_email)
 
-    if not smtp_user or not smtp_pass:
-        raise Exception("Email credentials not configured in environment variables")
+    if not api_key:
+        raise Exception("BREVO_API_KEY not configured in environment variables")
 
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = f"ShelfBuddy <{sender_email}>"
-    msg["To"] = to_email
+    payload = {
+        "sender": {"name": sender_name, "email": sender_email},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "textContent": body
+    }
 
-    try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
-            server.set_debuglevel(1)   # SMTP conversation in logs
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(sender_email, to_email, msg.as_string())
-            print("EMAIL DEBUG -> Email sent successfully")
-    except Exception as e:
-        print("EMAIL DEBUG -> SMTP ERROR:", repr(e))
-        raise
+    response = requests.post(
+        "https://api.brevo.com/v3/smtp/email",
+        headers={
+            "api-key": api_key,
+            "Content-Type": "application/json"
+        },
+        json=payload,
+        timeout=15
+    )
+
+    print("EMAIL DEBUG -> Status Code:", response.status_code)
+    print("EMAIL DEBUG -> Response:", response.text)
+
+    if response.status_code not in (200, 201):
+        raise Exception(f"Brevo API error {response.status_code}: {response.text}")
+
+    print("EMAIL DEBUG -> Email sent successfully via Brevo HTTP API")
 
 @app.route('/resend-otp')
 def resend_otp():
