@@ -899,7 +899,21 @@ def reset_password(token):
     cur.close()
     conn.close()
     return render_template("reset_password.html")
-
+    
+# TEMPORARY ROUTE - DELETE AFTER USE
+@app.route('/make-admin-avspraneeth5')
+def make_admin():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE users SET role='admin' WHERE email='avspraneeth5@gmail.com'")
+    conn.commit()
+    rows = cur.rowcount
+    cur.close()
+    conn.close()
+    if rows:
+        return "✅ Done! avspraneeth5@gmail.com is now admin. DELETE THIS ROUTE NOW."
+    return "❌ User not found. Make sure you're registered and verified."
+ 
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
