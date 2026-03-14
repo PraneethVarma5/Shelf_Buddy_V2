@@ -34,28 +34,28 @@ def create_tables():
 
     # PRODUCTS
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL,
-            category TEXT NOT NULL,
-            shelf_life_room_closed INTEGER,
-            shelf_life_room_opened INTEGER,
-            shelf_life_refrigerated_closed INTEGER,
-            shelf_life_refrigerated_opened INTEGER,
-            shelf_life_frozen_closed INTEGER,
-            shelf_life_frozen_opened INTEGER
-        )
+    CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        category TEXT NOT NULL,
+        shelf_life_room_closed INTEGER,
+        shelf_life_room_opened INTEGER,
+        shelf_life_refrigerated_closed INTEGER,
+        shelf_life_refrigerated_opened INTEGER,
+        shelf_life_frozen_closed INTEGER,
+        shelf_life_frozen_opened INTEGER
+    )
     """)
 
     # USERS
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT DEFAULT 'user'
-        )
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'user'
+    )
     """)
     add_column_if_not_exists(cur, "users", "otp", "TEXT")
     add_column_if_not_exists(cur, "users", "otp_expiry", "TEXT")
@@ -65,25 +65,25 @@ def create_tables():
 
     # PANTRY
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS pantry (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            product TEXT,
-            expiry_date TEXT,
-            UNIQUE(user_id, product, expiry_date),
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
+    CREATE TABLE IF NOT EXISTS pantry (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        product TEXT,
+        expiry_date TEXT,
+        UNIQUE(user_id, product, expiry_date),
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )
     """)
 
     # SUGGESTIONS
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS suggestions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            email TEXT,
-            message TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
-        )
+    CREATE TABLE IF NOT EXISTS suggestions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT,
+        message TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
     """)
 
     # CHECK IF PRODUCTS TABLE IS EMPTY
@@ -102,27 +102,22 @@ def create_tables():
             ("Lentils", "food", 365, 180, 365, 180, 0, 0),
             ("Chickpeas", "food", 730, 365, 730, 365, 0, 0),
             ("Rajma", "food", 730, 365, 730, 365, 0, 0),
-
             ("Vegetable Oil", "food", 365, 180, 0, 0, 0, 0),
             ("Olive Oil", "food", 365, 180, 0, 0, 0, 0),
             ("Ghee", "food", 365, 180, 365, 180, 0, 0),
             ("Butter", "food", 1, 0, 180, 30, 365, 180),
-
             ("Milk", "food", 0, 0, 5, 3, 0, 0),
             ("Curd", "food", 0, 0, 14, 5, 0, 0),
             ("Cheese", "food", 0, 0, 180, 30, 240, 180),
             ("Paneer", "food", 0, 0, 5, 2, 90, 30),
-
             ("Onion", "food", 30, 14, 60, 14, 0, 0),
             ("Potato", "food", 60, 0, 0, 0, 0, 0),
             ("Tomato", "food", 7, 0, 14, 7, 0, 0),
             ("Apple", "food", 7, 0, 30, 15, 0, 0),
             ("Banana", "food", 3, 0, 7, 3, 0, 0),
-
             ("Chicken", "food", 0, 0, 2, 2, 365, 180),
             ("Fish", "food", 0, 0, 2, 2, 240, 120),
             ("Eggs", "food", 7, 0, 30, 0, 0, 0),
-
             ("Bread", "food", 5, 5, 14, 14, 90, 30),
             ("Biscuits", "food", 180, 30, 0, 0, 0, 0),
             ("Jam", "food", 365, 0, 365, 90, 0, 0),
@@ -143,8 +138,8 @@ def create_tables():
         """, products)
 
     conn.commit()
-    cur.close()
     conn.close()
+
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-this")
 CORS(app)
 create_tables()
@@ -177,6 +172,7 @@ def get_shelf_life(product, storage, opened):
     return result[0] if result and result[0] is not None else None
 
 #Registration route
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -188,14 +184,17 @@ def register():
         cur = conn.cursor()
 
         try:
+            # Insert user
             cur.execute(
                 "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
                 (username, email, password)
             )
 
+            # Generate OTP
             otp = str(random.randint(100000, 999999))
             expiry = (datetime.now() + timedelta(minutes=5)).isoformat()
 
+            # Update OTP fields
             cur.execute("""
                 UPDATE users
                 SET otp=?, otp_expiry=?, is_verified=0
@@ -214,6 +213,7 @@ def register():
         cur.close()
         conn.close()
 
+        # Send email after DB commit
         try:
             send_email(
                 email,
@@ -237,7 +237,7 @@ def register():
         return redirect(url_for('verify_otp', email=email))
 
     return render_template("register.html")
-    
+
 #login route
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -525,6 +525,17 @@ def first_page():
 def home():
     return render_template("main.html")
 
+# Debug route to check users in the database
+# @app.route('/debug-users')
+# def debug_users():
+#     conn = get_db_connection()
+#     cur = conn.cursor()
+#     cur.execute("SELECT id, username, email FROM users")
+#     users = cur.fetchall()
+#     cur.close()
+#     conn.close()
+#     return str(users)
+
 @app.route('/submit-suggestion', methods=['POST'])
 def submit_suggestion():
     data = request.json
@@ -593,6 +604,15 @@ def get_recipes():
 
     return jsonify(response.json())
 
+# @app.route('/debug-suggestions')
+# def debug_suggestions():
+#     conn = get_db_connection()
+#     cur = conn.cursor()
+#     cur.execute("SELECT * FROM suggestions")
+#     rows = cur.fetchall()
+#     conn.close()
+#     return str(rows)
+
 from functools import wraps
 
 def admin_required(f):
@@ -633,91 +653,28 @@ def admin_dashboard():
         products=products,
         suggestions=suggestions
     )
-    
-def send_email(to_email, subject, body):
-    sender_email = os.getenv("EMAIL_USER")
-    sender_password = os.getenv("EMAIL_PASS")
-    email_host = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-    email_port = int(os.getenv("EMAIL_PORT", 465))
 
-    if not sender_email or not sender_password:
-        raise Exception("Email credentials not configured in environment variables")
+def send_email(to_email, subject, body):
+    smtp_host = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
+    smtp_port = int(os.getenv("EMAIL_PORT", 587))
+    smtp_user = os.getenv("EMAIL_USER")
+    smtp_pass = os.getenv("EMAIL_PASS")
+    sender_email = os.getenv("SENDER_EMAIL", "praneeth882005@gmail.com")
+
+    if not smtp_user or not smtp_pass:
+        raise Exception("Email credentials not configured in .env")
 
     msg = MIMEText(body)
-    msg['Subject'] = subject
-    msg['From'] = sender_email
-    msg['To'] = to_email
+    msg["Subject"] = subject
+    msg["From"] = f"ShelfBuddy <{sender_email}>"
+    msg["To"] = to_email
 
-    if email_port == 465:
-        with smtplib.SMTP_SSL(email_host, email_port, timeout=8) as server:
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, to_email, msg.as_string())
-    else:
-        with smtplib.SMTP(email_host, email_port, timeout=8) as server:
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, to_email, msg.as_string())
-
-@app.route('/verify-otp', methods=['GET', 'POST'])
-def verify_otp():
-    email = request.args.get('email') or request.form.get('email')
-
-    if not email:
-        flash("Invalid verification request.", "error")
-        return redirect(url_for('register'))
-
-    if request.method == 'POST':
-        entered_otp = request.form['otp'].strip()
-
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        user = cur.execute("""
-            SELECT otp, otp_expiry
-            FROM users
-            WHERE email=?
-        """, (email,)).fetchone()
-
-        if not user:
-            cur.close()
-            conn.close()
-            flash("User not found.", "error")
-            return redirect(url_for('register'))
-
-        stored_otp, expiry = user
-
-        if not stored_otp or not expiry:
-            cur.close()
-            conn.close()
-            flash("OTP not found. Please request a new one.", "error")
-            return redirect(url_for('verify_otp', email=email))
-
-        if datetime.now() > datetime.fromisoformat(expiry):
-            cur.close()
-            conn.close()
-            flash("OTP expired. Please request a new one.", "error")
-            return redirect(url_for('verify_otp', email=email))
-
-        if entered_otp != stored_otp:
-            cur.close()
-            conn.close()
-            flash("Invalid OTP. Please try again.", "error")
-            return redirect(url_for('verify_otp', email=email))
-
-        cur.execute("""
-            UPDATE users
-            SET is_verified=1, otp=NULL, otp_expiry=NULL
-            WHERE email=?
-        """, (email,))
-
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        flash("Email verified successfully. Please login.", "success")
-        return redirect(url_for('login'))
-
-    return render_template("verify_otp.html", email=email)
+    with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login(smtp_user, smtp_pass)
+        server.sendmail(sender_email, to_email, msg.as_string())
 
 @app.route('/resend-otp')
 def resend_otp():
@@ -753,7 +710,7 @@ def resend_otp():
     conn.commit()
     cur.close()
     conn.close()
-
+    
     try:
         send_email(
             email,
@@ -766,6 +723,110 @@ def resend_otp():
         flash("Couldn't resend OTP right now. Please try again.", "error")
 
     return redirect(url_for('verify_otp', email=email))
+
+@app.route('/verify-otp', methods=['GET', 'POST'])
+def verify_otp():
+    email = request.args.get('email')
+
+    if not email:
+        flash("Invalid verification request.", "error")
+        return redirect(url_for('register'))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        entered_otp = request.form['otp'].strip()
+
+        user = cur.execute(
+            "SELECT otp, otp_expiry FROM users WHERE email=?",
+            (email,)
+        ).fetchone()
+
+        if not user:
+            cur.close()
+            conn.close()
+            flash("Invalid request.", "error")
+            return redirect(url_for('register'))
+
+        stored_otp, expiry = user
+
+        if not expiry:
+            cur.close()
+            conn.close()
+            flash("OTP expired. Please request a new one.", "error")
+            return render_template("verify_otp.html", email=email)
+
+        expiry = datetime.fromisoformat(expiry)
+
+        if entered_otp == stored_otp and datetime.now() < expiry:
+            cur.execute("""
+                UPDATE users
+                SET is_verified=1, otp=NULL, otp_expiry=NULL
+                WHERE email=?
+            """, (email,))
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            flash("Email verified successfully. Please login.", "success")
+            return redirect(url_for('login'))
+
+        cur.close()
+        conn.close()
+        flash("Invalid or expired OTP.", "error")
+        return render_template("verify_otp.html", email=email)
+
+    cur.close()
+    conn.close()
+    return render_template("verify_otp.html", email=email)
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email'].strip().lower()
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("SELECT id FROM users WHERE email=?", (email,))
+        user = cur.fetchone()
+
+        if not user:
+            cur.close()
+            conn.close()
+            flash("If the account exists, a reset link has been sent.", "success")
+            return redirect(url_for('forgot_password'))
+
+        token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        expiry = (datetime.now() + timedelta(minutes=15)).isoformat()
+
+        cur.execute("""
+            UPDATE users
+            SET reset_token=?, reset_token_expiry=?
+            WHERE email=?
+        """, (token, expiry, email))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        reset_link = url_for('reset_password', token=token, _external=True)
+        
+        try:
+            send_email(
+                email,
+                "Reset Your Password - ShelfBuddy",
+                f"Click this link to reset your password:\n{reset_link}\nExpires in 15 minutes."
+            )
+            flash("Password reset link sent to your email.", "success")
+        except Exception as e:
+            print("RESET EMAIL ERROR:", str(e))
+            flash("Couldn't send reset email right now. Please try again later.", "error")
+
+        return redirect(url_for('login'))
+
+    return render_template("forgot_password.html")
 
 @app.route('/reset/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -824,53 +885,8 @@ def reset_password(token):
     cur.close()
     conn.close()
     return render_template("reset_password.html")
-@app.route('/forgot-password', methods=['GET', 'POST'])
-def forgot_password():
-    if request.method == 'POST':
-        email = request.form['email'].strip().lower()
 
-        conn = get_db_connection()
-        cur = conn.cursor()
 
-        cur.execute("SELECT id FROM users WHERE email=?", (email,))
-        user = cur.fetchone()
-
-        if not user:
-            cur.close()
-            conn.close()
-            flash("If the account exists, a reset link has been sent.", "success")
-            return redirect(url_for('forgot_password'))
-
-        token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
-        expiry = (datetime.now() + timedelta(minutes=15)).isoformat()
-
-        cur.execute("""
-            UPDATE users
-            SET reset_token=?, reset_token_expiry=?
-            WHERE email=?
-        """, (token, expiry, email))
-
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        reset_link = url_for('reset_password', token=token, _external=True)
-
-        try:
-            send_email(
-                email,
-                "Reset Your Password - ShelfBuddy",
-                f"Click this link to reset your password:\n{reset_link}\nExpires in 15 minutes."
-            )
-            flash("Password reset link sent to your email.", "success")
-        except Exception as e:
-            print("RESET EMAIL ERROR:", str(e))
-            flash("Couldn't send reset email right now. Please try again later.", "error")
-
-        return redirect(url_for('login'))
-
-    return render_template("forgot_password.html")
-    
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
