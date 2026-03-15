@@ -1,5 +1,6 @@
 # ShelfBuddy - Smart Pantry & Recipe Assistant
-# Live Link - https://shelf-buddy-v2.onrender.com/ (It may cold start in 30sec as i used free tier of render)
+## Live Link - https://shelf-buddy-v2.onrender.com/ 
+### (It may cold start in 30sec as i used free tier of render)
 ShelfBuddy is a Flask-based web application that helps users check the shelf life of food items, manage a personal pantry, and discover recipe suggestions based on available ingredients. It is designed as a practical utility project focused on reducing food waste and improving day-to-day kitchen planning.
 
 The application combines pantry tracking with recipe discovery by allowing users to search for an item, view its storage-based shelf life, save it to their pantry, and optionally use ingredients with a selected cuisine preference to get relevant recipe suggestions.
@@ -64,33 +65,38 @@ The application combines pantry tracking with recipe discovery by allowing users
 
 ## Installation & Local Setup
 ### 1. Clone the repository
+```
 git clone https://github.com/PraneethVarma5/Shelf_Buddy_V2.git
 cd Shelf_Buddy_V2
 
 ### 2. Create and activate a virtual environment
+```
 python -m venv venv
 venv\Scripts\activate
 
 ### 3. Install dependencies
+```
 pip install -r requirements.txt
 
 ### 4. Populate the database
+```
 python populate_sqlite.py
 
 ### 5. Run the application
+```
 python app.py
 
 ### 6. Open in browser
+```
 http://127.0.0.1:5000
 
 ---
 
 ## Environment Variables
 
-Create a `.env` file in the project root:
+Create a .env file in the project root and add the following:
 
 ```env
-Create a .env file in the project root and add the following:
 SPOONACULAR_API_KEY=your_spoonacular_api_key
 DATABASE_PATH=shelfbuddy.db
 SECRET_KEY=your_secret_key_here
